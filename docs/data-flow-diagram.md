@@ -1,6 +1,6 @@
 # Julectron EdgeGuard - Data Flow Architecture
 
-<img width="1024" height="1536" alt="data-flow-diagram png" src="https://github.com/user-attachments/assets/32a1f5f5-247d-4eb0-ad0a-258934bc6b29" />
+<img width="512" height="768" alt="data-flow-diagram png" src="https://github.com/user-attachments/assets/32a1f5f5-247d-4eb0-ad0a-258934bc6b29" />
 
 
 ### Design Philosophy
