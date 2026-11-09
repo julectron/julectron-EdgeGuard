@@ -1,6 +1,6 @@
 # Julectron EdgeGuard - System Architecture
 
-![Julectron EdgeGuard Architecture](images/architecture-diagram.png)
+<img src="https://raw.githubusercontent.com/julectron/julectron-EdgeGuard/main/images/architecture-diagram.png" alt="Julectron EdgeGuard Architecture" width="512">
 
 ### System Overview
 The primary goal of this project is to monitor the health and detect faults in an electric motor. This is achieved by using an **ADXL345 vibration sensor** to capture vibration data across three axes (X, Y, Z). We apply **FFT (Fast Fourier Transform)** to each axis to analyze the motor's condition in the frequency domain.
