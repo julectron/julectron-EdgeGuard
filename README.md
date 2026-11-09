@@ -22,3 +22,6 @@ Designed for predictive maintenance of electric motors using STM32, FreeRTOS, an
 ## Author
 **Morteza Ranjbar** (Founder of Julectron)
 [GitHub Profile](https://github.com/julectron)
+## Documentation
+- [System Architecture & Block Diagram](docs/block-diagram.md)
+- [Data Flow Diagram](docs/data-flow-diagram.md)
