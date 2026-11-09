@@ -1,6 +1,6 @@
 # Julectron EdgeGuard - System Architecture
 
-
+<img src="architecture-diagram.png.png" alt="Julectron EdgeGuard Architecture" width="512">
 
 
 ### System Overview
