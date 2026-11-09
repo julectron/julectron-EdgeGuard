@@ -1,6 +1,7 @@
 # Julectron EdgeGuard - Data Flow Architecture
 
-*(Data Flow diagram will be uploaded soon)*
+<img width="1024" height="1536" alt="data-flow-diagram png" src="https://github.com/user-attachments/assets/32a1f5f5-247d-4eb0-ad0a-258934bc6b29" />
+
 
 ### Design Philosophy
 System design starts with defining the problem: What do we want to achieve, and what must we do? We create a logical data flow diagram and follow it step by step.
