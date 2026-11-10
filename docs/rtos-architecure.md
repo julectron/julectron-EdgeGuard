@@ -1,3 +1,33 @@
+# Real-Time Operating System (RTOS) Architecture
+
+In Julectron EdgeGuard, we use a Real-Time Operating System (RTOS) for deterministic time management and task scheduling. The overall system architecture is divided into several independent task modules.
+
+## Task Architecture
+The system pipeline is divided into 5 independent tasks. The number and definition of tasks depend on the system architecture and the designer's decision. However, from my perspective, fewer tasks are always better to reduce context-switching overhead and system complexity.
+
+The 5 core tasks are:
+1. **Receiving Task:** Reads data from the sensor.
+2. **Preprocessing Task:** Prepares the data (filtering, windowing).
+3. **Processing Task:** Performs DSP (FFT, feature extraction).
+4. **Modeling Task:** Runs the TinyML model inference.
+5. **Decision Task:** Compares the result with the threshold.
+
+## Task Priorities
+In an RTOS, each task must have a priority. The Receiving and Preprocessing tasks must have higher priorities than the others. Otherwise, incoming sensor data will be lost (data overrun). In this architecture, I have assigned the highest priority (4) to the Receiving Task and the lowest priority (1) to the Decision Task.
+
+## Inter-Task Communication & Synchronization
+To accelerate data transfer and ensure proper synchronization between tasks, we defined and handled **Queues** inside the tasks. By passing the **address (pointer)** of the data arrays instead of copying the entire data, the system achieves high-speed data transfer and seamless synchronization.
+
+**Additional Note (For more information):**
+**Queue** in the RTOS architecture is a subset of **Synchronization**, responsible for synchronizing and communicating between tasks. Other methods include Semaphore, Mutex, Event Groups, Task Notifications, Stream Buffers, and Message Buffers. In this architecture, we chose to use Queue. Additionally, task definition and coding are subsets of **Task Management**.
+
+Additionally, a **Binary Semaphore** is used to synchronize the hardware DMA interrupt with the Receiving task, ensuring the CPU wakes up only when the buffer is full.
+
+## Code Implementation
+
+*Note: The code below is the initial skeleton with implemented Queue and Semaphore communication. The internal DSP and AI logic will be implemented step-by-step.*
+
+```c
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
