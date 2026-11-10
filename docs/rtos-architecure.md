@@ -164,3 +164,8 @@ void Create_Tasks(void)
     xTaskCreate(modelingTask, "Modeling", 1024, NULL, PRIORITY_MODELING, NULL);
     xTaskCreate(decisionTask, "Decision", 1024, NULL, PRIORITY_DECISION, NULL);
 }
+
+
+
+---
+*End of Day 3. I do not claim to know everything, but I am trying my best to become the best.*
