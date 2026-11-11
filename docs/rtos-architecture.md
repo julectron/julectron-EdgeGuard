@@ -15,6 +15,16 @@ The 5 core tasks are:
 ## Task Priorities
 In an RTOS, each task must have a priority. The Receiving and Preprocessing tasks must have higher priorities than the others. Otherwise, incoming sensor data will be lost (data overrun). In this architecture, I have assigned the highest priority (4) to the Receiving Task and the lowest priority (1) to the Decision Task.
 
+## System State Machine (Motor Health)
+Instead of using simple if/else statements, we implemented a **State Machine** with 4 distinct states: **Normal**, **Warning**, **Critical**, and **Error**.
+
+To define this structure, we currently use **Placeholder Thresholds** (dummy values) which will be replaced with real-world calculated values later.
+
+### State Behavior:
+- The system always remains in exactly one state at any given time.
+- If no valid data is received (or the data is invalid/NaN), the system transitions to the **Error** state.
+- When valid data is present, the system dynamically rotates between the other three states (**Normal**, **Warning**, **Critical**) based on the threshold values.
+
 ## Inter-Task Communication & Synchronization
 To accelerate data transfer and ensure proper synchronization between tasks, we defined and handled **Queues** inside the tasks. By passing the **address (pointer)** of the data arrays instead of copying the entire data, the system achieves high-speed data transfer and seamless synchronization.
 
@@ -25,7 +35,7 @@ Additionally, a **Binary Semaphore** is used to synchronize the hardware DMA int
 
 ## Code Implementation
 
-*Note: The code below is the initial skeleton with implemented Queue and Semaphore communication. The internal DSP and AI logic will be implemented step-by-step.*
+*Note: The code below is the initial skeleton with implemented Queue and Semaphore communication, as well as the State Machine logic. The internal DSP and AI logic will be implemented step-by-step.*
 
 ```c
 #include "FreeRTOS.h"
@@ -33,12 +43,26 @@ Additionally, a **Binary Semaphore** is used to synchronize the hardware DMA int
 #include "queue.h"
 #include "semphr.h"
 #include "stm32f4xx_hal.h"
+#include <math.h>
 
 #define PRIORITY_RECEIVING    4
 #define PRIORITY_PREPROCESS   3
 #define PRIORITY_PROCESSING   3
 #define PRIORITY_MODELING     2
 #define PRIORITY_DECISION     1
+
+#define THRESHOLD_WARNING     30.0f
+#define THRESHOLD_CRITICAL    60.0f
+
+typedef enum
+{
+    Normal,
+    Warning,
+    Critical,
+    Error
+} SystemState;
+
+SystemState currentState = Normal;
 
 QueueHandle_t receivingQueue;
 QueueHandle_t preprocessingQueue;
@@ -64,7 +88,6 @@ void receivingTask(void *pvParameters)
     }
 }
 
-
 void preprocessingTask(void *pvParameters)
 {
     ReceivingData data;
@@ -78,7 +101,6 @@ void preprocessingTask(void *pvParameters)
         }
     }
 }
-
 
 void processingTask(void *pvParameters)
 {
@@ -94,7 +116,6 @@ void processingTask(void *pvParameters)
     }
 }
 
-
 void modelingTask(void *pvParameters)
 {
     ProcessingData data;
@@ -109,19 +130,57 @@ void modelingTask(void *pvParameters)
     }
 }
 
-
 void decisionTask(void *pvParameters)
 {
     ModelData data;
+    float ModelOutput;
 
     while(1)
     {
-        if(xQueueReceive(modelingQueue, &data, portMAX_DELAY) == pdPASS)
+        if(xQueueReceive(modelingQueue, &data, pdMS_TO_TICKS(1)) == pdPASS)
         {
+            ModelOutput = data.modelOutput;
+
+            if(!isfinite(ModelOutput))
+            {
+                currentState = Error;
+            }
+            else
+            {
+                switch(currentState)
+                {
+                    case Normal:
+                        if(ModelOutput >= THRESHOLD_WARNING)
+                            currentState = Warning;
+                        break;
+
+                    case Warning:
+                        if(ModelOutput >= THRESHOLD_CRITICAL)
+                            currentState = Critical;
+                        else if(ModelOutput < THRESHOLD_WARNING)
+                            currentState = Normal;
+                        break;
+
+                    case Critical:
+                        if(ModelOutput < THRESHOLD_CRITICAL)
+                            currentState = Warning;
+                        break;
+
+                    case Error:
+                        break;
+
+                    default:
+                        currentState = Error;
+                        break;
+                }
+            }
+        }
+        else
+        {
+            currentState = Error;
         }
     }
 }
-
 
 void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
 {
@@ -134,7 +193,6 @@ void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
 
     portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
-
 
 void Create_Tasks(void)
 {
@@ -164,8 +222,3 @@ void Create_Tasks(void)
     xTaskCreate(modelingTask, "Modeling", 1024, NULL, PRIORITY_MODELING, NULL);
     xTaskCreate(decisionTask, "Decision", 1024, NULL, PRIORITY_DECISION, NULL);
 }
-
-
-
----
-*End of Day 3. I do not claim to know everything, but I am trying my best to become the best.*
