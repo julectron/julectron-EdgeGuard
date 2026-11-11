@@ -28,6 +28,9 @@ To define this structure, we currently use **Placeholder Thresholds** (dummy val
 ## Inter-Task Communication & Synchronization
 To accelerate data transfer and ensure proper synchronization between tasks, we defined and handled **Queues** inside the tasks. By passing the **address (pointer)** of the data arrays instead of copying the entire data, the system achieves high-speed data transfer and seamless synchronization.
 
+**Modular Interfaces:**
+We designed the tasks to be modular, communicating through specific **Interfaces**. We ensured that each task is modularized based on the nature of its data output. This is because the output data structure of the Receiving task is entirely different from the output data structure of the Processing task.
+
 **Additional Note (For more information):**
 **Queue** in the RTOS architecture is a subset of **Synchronization**, responsible for synchronizing and communicating between tasks. Other methods include Semaphore, Mutex, Event Groups, Task Notifications, Stream Buffers, and Message Buffers. In this architecture, we chose to use Queue. Additionally, task definition and coding are subsets of **Task Management**.
 
@@ -35,7 +38,7 @@ Additionally, a **Binary Semaphore** is used to synchronize the hardware DMA int
 
 ## Code Implementation
 
-*Note: The code below is the initial skeleton with implemented Queue and Semaphore communication, as well as the State Machine logic. The internal DSP and AI logic will be implemented step-by-step.*
+*Note: The code below is the initial architecture with implemented Queue, Semaphore, State Machine logic, and Modular Interfaces. The internal structures and DSP logic will be implemented step-by-step.*
 
 ```c
 #include "FreeRTOS.h"
@@ -72,6 +75,17 @@ QueueHandle_t modelingQueue;
 SemaphoreHandle_t dmaSemaphore;
 
 
+BaseType_t ReceivingModule_Read(SPI_HandleTypeDef *spi, ReceivingData *output);
+
+BaseType_t PreprocessingModule_Process(ReceivingData *input, PreprocessingData *output);
+
+BaseType_t ProcessingModule_Process(PreprocessingData *input, ProcessingData *output);
+
+BaseType_t ModelingModule_Process(ProcessingData *input, ModelData *output);
+
+BaseType_t DecisionModule_IsValid(float ModelOutput);
+
+
 void receivingTask(void *pvParameters)
 {
     SPI_HandleTypeDef *spi = (SPI_HandleTypeDef *)pvParameters;
@@ -81,8 +95,9 @@ void receivingTask(void *pvParameters)
     {
         if(xSemaphoreTake(dmaSemaphore, portMAX_DELAY) == pdTRUE)
         {
-            if(xQueueSend(receivingQueue, &data, portMAX_DELAY) != pdPASS)
+            if(ReceivingModule_Read(spi, &data) == pdTRUE)
             {
+                xQueueSend(receivingQueue, &data, portMAX_DELAY);
             }
         }
     }
@@ -97,7 +112,11 @@ void preprocessingTask(void *pvParameters)
         if(xQueueReceive(receivingQueue, &data, portMAX_DELAY) == pdPASS)
         {
             PreprocessingData output;
-            xQueueSend(preprocessingQueue, &output, portMAX_DELAY);
+
+            if(PreprocessingModule_Process(&data, &output) == pdTRUE)
+            {
+                xQueueSend(preprocessingQueue, &output, portMAX_DELAY);
+            }
         }
     }
 }
@@ -111,7 +130,11 @@ void processingTask(void *pvParameters)
         if(xQueueReceive(preprocessingQueue, &data, portMAX_DELAY) == pdPASS)
         {
             ProcessingData output;
-            xQueueSend(processingQueue, &output, portMAX_DELAY);
+
+            if(ProcessingModule_Process(&data, &output) == pdTRUE)
+            {
+                xQueueSend(processingQueue, &output, portMAX_DELAY);
+            }
         }
     }
 }
@@ -125,7 +148,11 @@ void modelingTask(void *pvParameters)
         if(xQueueReceive(processingQueue, &data, portMAX_DELAY) == pdPASS)
         {
             ModelData output;
-            xQueueSend(modelingQueue, &output, portMAX_DELAY);
+
+            if(ModelingModule_Process(&data, &output) == pdTRUE)
+            {
+                xQueueSend(modelingQueue, &output, portMAX_DELAY);
+            }
         }
     }
 }
@@ -141,7 +168,7 @@ void decisionTask(void *pvParameters)
         {
             ModelOutput = data.modelOutput;
 
-            if(!isfinite(ModelOutput))
+            if(DecisionModule_IsValid(ModelOutput) != pdTRUE)
             {
                 currentState = Error;
             }
