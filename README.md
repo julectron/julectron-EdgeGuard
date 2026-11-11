@@ -24,6 +24,5 @@ Designed for predictive maintenance of electric motors using STM32, FreeRTOS, an
 [GitHub Profile](https://github.com/julectron)
 ## Documentation
 - [System Architecture & Block Diagram](docs/block-diagram.md)
-- [Data Flow Diagram](docs/data-flow-diagram.md)
-- - [RTOS Architecture & Synchronization](docs/rtos-architecture.md)
+- [Data Flow Diagram](docs/data-flow-diagram.md) - [RTOS Architecture & Synchronization](docs/rtos-architecture.md)
   
