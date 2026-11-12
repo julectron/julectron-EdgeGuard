@@ -1,251 +1,149 @@
-# Real-Time Operating System (RTOS) Architecture
+# RTOS Architecture (In Development)
 
-In Julectron EdgeGuard, we use a Real-Time Operating System (RTOS) for deterministic time management and task scheduling. The overall system architecture is divided into several independent task modules.
+*Note on Architecture Refactoring:*
+In the previous architecture, there were structural issues and a lack of organization. I decided to redesign the architecture in a more structured and standard way. This caused a slight delay in the daily routine of the EdgeGuard project, but resulted in a much more robust and defensible codebase.
 
-## Task Architecture
-The system pipeline is divided into 5 independent tasks. The number and definition of tasks depend on the system architecture and the designer's decision. However, from my perspective, fewer tasks are always better to reduce context-switching overhead and system complexity.
+Since I need to add new code daily, I currently have to replace the entire file rather than editing it, because piecemeal edits disrupt the overall order. Therefore, the **final detailed documentation will be written upon the completion of the RTOS architecture phase.**
 
-The 5 core tasks are:
-1. **Receiving Task:** Reads data from the sensor.
-2. **Preprocessing Task:** Prepares the data (filtering, windowing).
-3. **Processing Task:** Performs DSP (FFT, feature extraction).
-4. **Modeling Task:** Runs the TinyML model inference.
-5. **Decision Task:** Compares the result with the threshold.
-
-## Task Priorities
-In an RTOS, each task must have a priority. The Receiving and Preprocessing tasks must have higher priorities than the others. Otherwise, incoming sensor data will be lost (data overrun). In this architecture, I have assigned the highest priority (4) to the Receiving Task and the lowest priority (1) to the Decision Task.
-
-## System State Machine (Motor Health)
-Instead of using simple if/else statements, we implemented a **State Machine** with 4 distinct states: **Normal**, **Warning**, **Critical**, and **Error**.
-
-To define this structure, we currently use **Placeholder Thresholds** (dummy values) which will be replaced with real-world calculated values later.
-
-### State Behavior:
-- The system always remains in exactly one state at any given time.
-- If no valid data is received (or the data is invalid/NaN), the system transitions to the **Error** state.
-- When valid data is present, the system dynamically rotates between the other three states (**Normal**, **Warning**, **Critical**) based on the threshold values.
-
-## Inter-Task Communication & Synchronization
-To accelerate data transfer and ensure proper synchronization between tasks, we defined and handled **Queues** inside the tasks. By passing the **address (pointer)** of the data arrays instead of copying the entire data, the system achieves high-speed data transfer and seamless synchronization.
-
-**Modular Interfaces:**
-We designed the tasks to be modular, communicating through specific **Interfaces**. We ensured that each task is modularized based on the nature of its data output. This is because the output data structure of the Receiving task is entirely different from the output data structure of the Processing task.
-
-**Additional Note (For more information):**
-**Queue** in the RTOS architecture is a subset of **Synchronization**, responsible for synchronizing and communicating between tasks. Other methods include Semaphore, Mutex, Event Groups, Task Notifications, Stream Buffers, and Message Buffers. In this architecture, we chose to use Queue. Additionally, task definition and coding are subsets of **Task Management**.
-
-Additionally, a **Binary Semaphore** is used to synchronize the hardware DMA interrupt with the Receiving task, ensuring the CPU wakes up only when the buffer is full.
-
-## Code Implementation
-
-*Note: The code below is the initial architecture with implemented Queue, Semaphore, State Machine logic, and Modular Interfaces. The internal structures and DSP logic will be implemented step-by-step.*
+## Current Code Implementation
 
 ```c
-#include "FreeRTOS.h"
-#include "task.h"
-#include "queue.h"
-#include "semphr.h"
-#include "stm32f4xx_hal.h"
-#include <math.h>
+#define RECEIVE_PRIORITY          5
+#define PREPROCESSING_PRIORITY    4
+#define PROCESSING_PRIORITY       3
+#define OUTPUT_MODEL_PRIORITY     2
+#define DECISION_PRIORITY         1
 
-#define PRIORITY_RECEIVING    4
-#define PRIORITY_PREPROCESS   3
-#define PRIORITY_PROCESSING   3
-#define PRIORITY_MODELING     2
-#define PRIORITY_DECISION     1
+#define RECEIVE_STACK_SIZE          256
+#define PREPROCESSING_STACK_SIZE   1024
+#define PROCESSING_STACK_SIZE      2048
+#define OUTPUT_MODEL_STACK_SIZE    1024
+#define DECISION_STACK_SIZE         256
 
-#define THRESHOLD_WARNING     30.0f
-#define THRESHOLD_CRITICAL    60.0f
+#define QUEUE_LENGTH               10
+#define QUEUE_ITEM_SIZE            sizeof(VibrationData *)
 
-typedef enum
+#define VIBRATION_BUFFER_SIZE      800
+
+
+typedef struct
 {
-    Normal,
-    Warning,
-    Critical,
-    Error
-} SystemState;
+    float X;
+    float Y;
+    float Z;
 
-SystemState currentState = Normal;
-
-QueueHandle_t receivingQueue;
-QueueHandle_t preprocessingQueue;
-QueueHandle_t processingQueue;
-QueueHandle_t modelingQueue;
-
-SemaphoreHandle_t dmaSemaphore;
+} VibrationData;
 
 
-BaseType_t ReceivingModule_Read(SPI_HandleTypeDef *spi, ReceivingData *output);
+VibrationData Vibration_Buffer[VIBRATION_BUFFER_SIZE];
 
-BaseType_t PreprocessingModule_Process(ReceivingData *input, PreprocessingData *output);
-
-BaseType_t ProcessingModule_Process(PreprocessingData *input, ProcessingData *output);
-
-BaseType_t ModelingModule_Process(ProcessingData *input, ModelData *output);
-
-BaseType_t DecisionModule_IsValid(float ModelOutput);
+VibrationData *Vibration_Data_Ptr = Vibration_Buffer;
 
 
-void receivingTask(void *pvParameters)
+QueueHandle_t Receive_Queue;
+QueueHandle_t Preprocessing_Queue;
+QueueHandle_t Processing_Queue;
+QueueHandle_t Output_Model_Queue;
+
+SemaphoreHandle_t DMA_Semaphore;
+
+
+void Receive_Task(void *pvParameters)
 {
-    SPI_HandleTypeDef *spi = (SPI_HandleTypeDef *)pvParameters;
-    ReceivingData data;
+    VibrationData *Data_Ptr = Vibration_Buffer;
 
-    while(1)
+    while (1)
     {
-        if(xSemaphoreTake(dmaSemaphore, portMAX_DELAY) == pdTRUE)
-        {
-            if(ReceivingModule_Read(spi, &data) == pdTRUE)
-            {
-                xQueueSend(receivingQueue, &data, portMAX_DELAY);
-            }
-        }
+        xSemaphoreTake(DMA_Semaphore, portMAX_DELAY);
+
+        xQueueSend(Receive_Queue, &Data_Ptr, portMAX_DELAY);
     }
 }
 
-void preprocessingTask(void *pvParameters)
+
+void Preprocessing_Task(void *pvParameters)
 {
-    ReceivingData data;
+    VibrationData *Data_Ptr;
 
-    while(1)
+    while (1)
     {
-        if(xQueueReceive(receivingQueue, &data, portMAX_DELAY) == pdPASS)
-        {
-            PreprocessingData output;
+        xQueueReceive(Receive_Queue, &Data_Ptr, portMAX_DELAY);
 
-            if(PreprocessingModule_Process(&data, &output) == pdTRUE)
-            {
-                xQueueSend(preprocessingQueue, &output, portMAX_DELAY);
-            }
-        }
+        xQueueSend(Preprocessing_Queue, &Data_Ptr, portMAX_DELAY);
     }
 }
 
-void processingTask(void *pvParameters)
+
+void Processing_Task(void *pvParameters)
 {
-    PreprocessingData data;
+    VibrationData *Data_Ptr;
 
-    while(1)
+    while (1)
     {
-        if(xQueueReceive(preprocessingQueue, &data, portMAX_DELAY) == pdPASS)
-        {
-            ProcessingData output;
+        xQueueReceive(Preprocessing_Queue, &Data_Ptr, portMAX_DELAY);
 
-            if(ProcessingModule_Process(&data, &output) == pdTRUE)
-            {
-                xQueueSend(processingQueue, &output, portMAX_DELAY);
-            }
-        }
+        xQueueSend(Processing_Queue, &Data_Ptr, portMAX_DELAY);
     }
 }
 
-void modelingTask(void *pvParameters)
+
+void Output_Model_Task(void *pvParameters)
 {
-    ProcessingData data;
+    VibrationData *Data_Ptr;
 
-    while(1)
+    while (1)
     {
-        if(xQueueReceive(processingQueue, &data, portMAX_DELAY) == pdPASS)
-        {
-            ModelData output;
+        xQueueReceive(Processing_Queue, &Data_Ptr, portMAX_DELAY);
 
-            if(ModelingModule_Process(&data, &output) == pdTRUE)
-            {
-                xQueueSend(modelingQueue, &output, portMAX_DELAY);
-            }
-        }
+        xQueueSend(Output_Model_Queue, &Data_Ptr, portMAX_DELAY);
     }
 }
 
-void decisionTask(void *pvParameters)
+
+void Decision_Task(void *pvParameters)
 {
-    ModelData data;
-    float ModelOutput;
+    VibrationData *Data_Ptr;
 
-    while(1)
+    while (1)
     {
-        if(xQueueReceive(modelingQueue, &data, pdMS_TO_TICKS(1)) == pdPASS)
-        {
-            ModelOutput = data.modelOutput;
-
-            if(DecisionModule_IsValid(ModelOutput) != pdTRUE)
-            {
-                currentState = Error;
-            }
-            else
-            {
-                switch(currentState)
-                {
-                    case Normal:
-                        if(ModelOutput >= THRESHOLD_WARNING)
-                            currentState = Warning;
-                        break;
-
-                    case Warning:
-                        if(ModelOutput >= THRESHOLD_CRITICAL)
-                            currentState = Critical;
-                        else if(ModelOutput < THRESHOLD_WARNING)
-                            currentState = Normal;
-                        break;
-
-                    case Critical:
-                        if(ModelOutput < THRESHOLD_CRITICAL)
-                            currentState = Warning;
-                        break;
-
-                    case Error:
-                        break;
-
-                    default:
-                        currentState = Error;
-                        break;
-                }
-            }
-        }
-        else
-        {
-            currentState = Error;
-        }
+        xQueueReceive(Output_Model_Queue, &Data_Ptr, portMAX_DELAY);
     }
 }
+
 
 void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
 {
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
-    xSemaphoreGiveFromISR(
-        dmaSemaphore,
-        &xHigherPriorityTaskWoken
-    );
+    xSemaphoreGiveFromISR(DMA_Semaphore, &xHigherPriorityTaskWoken);
 
     portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
 
-void Create_Tasks(void)
+
+void Queue_Management(void)
 {
-    dmaSemaphore = xSemaphoreCreateBinary();
+    Receive_Queue = xQueueCreate(QUEUE_LENGTH, QUEUE_ITEM_SIZE);
 
-    if(dmaSemaphore == NULL)
-    {
-        Error_Handler();
-    }
+    Preprocessing_Queue = xQueueCreate(QUEUE_LENGTH, QUEUE_ITEM_SIZE);
 
-    receivingQueue = xQueueCreate(5, sizeof(ReceivingData));
-    preprocessingQueue = xQueueCreate(5, sizeof(PreprocessingData));
-    processingQueue = xQueueCreate(5, sizeof(ProcessingData));
-    modelingQueue = xQueueCreate(5, sizeof(ModelData));
+    Processing_Queue = xQueueCreate(QUEUE_LENGTH, QUEUE_ITEM_SIZE);
 
-    if(receivingQueue == NULL ||
-       preprocessingQueue == NULL ||
-       processingQueue == NULL ||
-       modelingQueue == NULL)
-    {
-        Error_Handler();
-    }
+    Output_Model_Queue = xQueueCreate(QUEUE_LENGTH, QUEUE_ITEM_SIZE);
 
-    xTaskCreate(receivingTask, "Receiving", 1024, &hspi, PRIORITY_RECEIVING, NULL);
-    xTaskCreate(preprocessingTask, "Preprocessing", 1024, NULL, PRIORITY_PREPROCESS, NULL);
-    xTaskCreate(processingTask, "Processing", 1024, NULL, PRIORITY_PROCESSING, NULL);
-    xTaskCreate(modelingTask, "Modeling", 1024, NULL, PRIORITY_MODELING, NULL);
-    xTaskCreate(decisionTask, "Decision", 1024, NULL, PRIORITY_DECISION, NULL);
+    DMA_Semaphore = xSemaphoreCreateBinary();
+}
+
+
+void Task_Management(void)
+{
+    xTaskCreate(Receive_Task, "Receive", RECEIVE_STACK_SIZE, NULL, RECEIVE_PRIORITY, NULL);
+
+    xTaskCreate(Preprocessing_Task, "Preprocessing", PREPROCESSING_STACK_SIZE, NULL, PREPROCESSING_PRIORITY, NULL);
+
+    xTaskCreate(Processing_Task, "Processing", PROCESSING_STACK_SIZE, NULL, PROCESSING_PRIORITY, NULL);
+
+    xTaskCreate(Output_Model_Task, "Output_Model", OUTPUT_MODEL_STACK_SIZE, NULL, OUTPUT_MODEL_PRIORITY, NULL);
+
+    xTaskCreate(Decision_Task, "Decision", DECISION_STACK_SIZE, NULL, DECISION_PRIORITY, NULL);
 }
