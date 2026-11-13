@@ -35,6 +35,16 @@ typedef struct
 } VibrationData;
 
 
+typedef enum
+{
+    STATE_NORMAL,
+    STATE_WARNING,
+    STATE_CRITICAL,
+    STATE_ERROR
+
+} Decision_State;
+
+
 VibrationData Vibration_Buffer[VIBRATION_BUFFER_SIZE];
 
 VibrationData *Vibration_Data_Ptr = Vibration_Buffer;
@@ -103,10 +113,70 @@ void Output_Model_Task(void *pvParameters)
 void Decision_Task(void *pvParameters)
 {
     VibrationData *Data_Ptr;
+    Decision_State Current_State = STATE_NORMAL;
 
     while (1)
     {
         xQueueReceive(Output_Model_Queue, &Data_Ptr, portMAX_DELAY);
+
+        if (Data_Ptr == NULL)
+        {
+            Current_State = STATE_ERROR;
+        }
+        else
+        {
+            switch (Current_State)
+            {
+                case STATE_NORMAL:
+
+                    if (0)
+                    {
+                        Current_State = STATE_CRITICAL;
+                    }
+                    else if (0)
+                    {
+                        Current_State = STATE_WARNING;
+                    }
+
+                    break;
+
+
+                case STATE_WARNING:
+
+                    if (0)
+                    {
+                        Current_State = STATE_CRITICAL;
+                    }
+                    else if (0)
+                    {
+                        Current_State = STATE_NORMAL;
+                    }
+
+                    break;
+
+
+                case STATE_CRITICAL:
+
+                    if (0)
+                    {
+                        Current_State = STATE_WARNING;
+                    }
+
+                    break;
+
+
+                case STATE_ERROR:
+
+                    break;
+
+
+                default:
+
+                    Current_State = STATE_ERROR;
+
+                    break;
+            }
+        }
     }
 }
 
