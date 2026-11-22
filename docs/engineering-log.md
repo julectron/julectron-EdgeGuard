@@ -1,20 +1,25 @@
 # Engineering Log
 
-## Today's Focus
-- **Architecture Review & Refactoring:** Reviewed the dual-pipeline RTOS architecture. Analyzed data flow, queue synchronization, and state machine transitions to ensure zero data loss during mode switching.
-- **HAL Layer Analysis:** Deep dived into STM32 HAL source code to better understand SPI/DMA callbacks and interrupt handling for the upcoming sensor integration. 
-- **C/C++ Optimization:** Reviewed pointer arithmetic and memory management strategies to optimize the RTOS queues for high-frequency vibration data.
+## Project Architecture Overview & Recent Progress
 
-## Next Steps:
-- Begin implementing the actual SPI driver for the ADXL345 sensor.
-# Engineering Log
+I have mentally divided the EdgeGuard project into four main pillars:
+1. **Embedded System Pipeline (Data Acquisition to Preprocessing)**
+2. **Real-Time Operating System (RTOS) Architecture**
+3. **TinyML Model Training (Python) & C++ Weight Extraction**
+4. **Real-World Data Collection & Dataset Engineering** (The last two are complementary).
 
-## Today's Focus
-Today was dedicated to the precise calculation of buffer sizes and the configuration of the DMA (Direct Memory Access) tailored specifically for the **Julectron EdgeGuard** project. 
+### Current Status:
+- **RTOS Architecture:** The overall architecture is designed, though some refinements are still pending.
+- **Embedded System Design:** Peripherals are configured. The buffer size is strictly calculated to synchronize with the SPI sampling rate, avoid CPU interference, and maintain a valid window size for FFT.
+- **Code Implementation:** The sensor read function, DMA callbacks, and prototypes are defined.
 
-## Engineering Insight
-This phase of the project involves challenges that cannot be solved by simply following textbooks or online references. Beyond a certain point, engineering requires deep practical skills, critical thinking, and creativity to adapt hardware configurations to real-world project constraints.
+### Architectural Principles: Preprocessing Order
+I gained valuable insights regarding the **Preprocessing Pipeline**. I had to carefully analyze and determine the correct sequence for:
+- DC Offset removal
+- Windowing (Hann)
+- FFT implementation
 
-## Next Steps
-- Finalize the DMA configuration and link it with the SPI and Timer peripherals.
-- Begin the actual sensor data acquisition logic.
+Establishing these core principles is critical because the wrong order directly impacts the quality of time-domain and frequency-domain features, ultimately affecting the accuracy of the decision engine. This phase required deep architectural analysis to ensure system reliability. I adopted a precision-oriented and perfectionist approach here, which is necessary for this specific stage. As a result, I fell slightly behind on GitHub updates for a few days.
+
+### Why I am documenting this:
+I am sharing this to ensure my documentation reflects **genuine experience and architectural reasoning**, rather than copied tutorials. I hope this helps others navigating the same path. The embedded system design phase is nearing completion and will be published soon.
