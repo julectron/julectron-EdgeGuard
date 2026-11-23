@@ -27,4 +27,5 @@ Designed for predictive maintenance of electric motors using STM32, FreeRTOS, an
 - [Data Flow Diagram](docs/data-flow-diagram.md)
 -  [RTOS Architecture & Synchronization](docs/rtos-architecture.md)
 - [Embedded Firmware Code](docs/embedded-firmware.c)
+- [Engineering Log](docs/engineering-log.md)
   
