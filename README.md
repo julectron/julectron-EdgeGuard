@@ -30,3 +30,4 @@ Designed for predictive maintenance of electric motors using STM32, FreeRTOS, an
 - [Engineering Log](docs/engineering-log.md)
 - [Firmware Specifications](docs/firmware-specifications.md)
 - [Motor and Bearing Basics](docs/motor-and-bearing-basics.md)
+- [My Journey (Reflections)](docs/my-journey.md)
