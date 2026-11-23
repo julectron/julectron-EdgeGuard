@@ -20,6 +20,9 @@ I gained valuable insights regarding the **Preprocessing Pipeline**. I had to ca
 - FFT implementation
 
 Establishing these core principles is critical because the wrong order directly impacts the quality of time-domain and frequency-domain features, ultimately affecting the accuracy of the decision engine. This phase required deep architectural analysis to ensure system reliability. I adopted a precision-oriented and perfectionist approach here, which is necessary for this specific stage. As a result, I fell slightly behind on GitHub updates for a few days.
+### Update on Embedded Firmware
+The DSP Pipeline (Data Acquisition, Preprocessing, and Feature Extraction) is now fully implemented. You can review the complete source code here:
+- [Embedded Firmware Code](docs/embedded-firmware.c)
 
 ### Why I am documenting this:
 I am sharing this to ensure my documentation reflects **genuine experience and architectural reasoning**, rather than copied tutorials. I hope this helps others navigating the same path. The embedded system design phase is nearing completion and will be published soon.
