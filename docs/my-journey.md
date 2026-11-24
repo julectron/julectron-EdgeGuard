@@ -9,3 +9,12 @@ Before this project, I thought defining a buffer simply meant ensuring the filli
 The path for those who want to build something real is not easy. It's full of confusion and uncertainty, yet incredibly sweet at the same time. 
 
 I hope I succeed.
+---
+
+## The Cycle of Growth
+
+I have come to understand a fundamental truth about learning and building: 
+
+> **"I don't understand. I try. I get disappointed. I continue. Suddenly, I understand."**
+
+This is the cycle. It's not a straight line, but a spiral. Every time I feel stuck, I remind myself that this is just one phase of the cycle. The "not understanding" phase is the soil where the "understanding" phase will eventually grow.
