@@ -31,4 +31,4 @@ Designed for predictive maintenance of electric motors using STM32, FreeRTOS, an
 - [Firmware Specifications](docs/firmware-specifications.md)
 - [Motor and Bearing Basics](docs/motor-and-bearing-basics.md)
 - [My Journey (Reflections)](docs/my-journey.md)
-- [Python Phase Report (Day 1)](docs/python-day-1-report.md)
+- [Python Phase Report (Day 1)](docs/python-day1-repor.md)
