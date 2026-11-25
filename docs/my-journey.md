@@ -1,27 +1,7 @@
-# My Journey: Reflections on the EdgeGuard Path
-
-The path of growth and learning is a dark, winding, and often lonely road. It's filled with turning points where you might feel exhausted and tempted to give up. But success belongs to those who persist and maintain their consistency.
-
-Before starting the **Julectron EdgeGuard** project, I thought everything was prepared and ready. But once I dove in, I realized I was facing a labyrinth of paths and challenges that I had to solve on my own. From the dilemma of testing on actual hardware versus relying on validated datasets, to the deeper realizations of system design.
-
-Before this project, I thought defining a buffer simply meant ensuring the filling rate was slower than the processing rate. But along the way, I learned that it's much more complex. It depends on the system clock speed, the minimum data required for accurate processing, and the intricate balance between sampling and computation.
-
-The path for those who want to build something real is not easy. It's full of confusion and uncertainty, yet incredibly sweet at the same time. 
-
-I hope I succeed.
----
-
-## The Cycle of Growth
-
-I have come to understand a fundamental truth about learning and building: 
-
-> **"I don't understand. I try. I get disappointed. I continue. Suddenly, I understand."**
-
-This is the cycle. It's not a straight line, but a spiral. Every time I feel stuck, I remind myself that this is just one phase of the cycle. The "not understanding" phase is the soil where the "understanding" phase will eventually grow.
 ---
 
 ## My Broader Vision
 
-Through the **Julectron EdgeGuard** project, my goal is not just to build a single system, but to push my overall and general engineering capabilities to the limit within an industrial context. I want to prove to myself that I can navigate the entire path—from hardware and RTOS to Data and Edge AI. 
+Through the **Julectron EdgeGuard** project, my goal is to build a comprehensive, industry-level system from the ground up. This journey serves a deeper purpose: to prove to myself which specific domain I possess the greatest strength and passion for. 
 
-After completing this comprehensive journey, I will then choose one specific domain to focus on and elevate to an expert level.
+Once I complete this comprehensive project, I will identify that specific area and dedicate my focus to mastering and elevating it to an expert level.
