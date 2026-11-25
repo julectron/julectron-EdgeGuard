@@ -18,3 +18,10 @@ I have come to understand a fundamental truth about learning and building:
 > **"I don't understand. I try. I get disappointed. I continue. Suddenly, I understand."**
 
 This is the cycle. It's not a straight line, but a spiral. Every time I feel stuck, I remind myself that this is just one phase of the cycle. The "not understanding" phase is the soil where the "understanding" phase will eventually grow.
+---
+
+## My Broader Vision
+
+Through the **Julectron EdgeGuard** project, my goal is not just to build a single system, but to push my overall and general engineering capabilities to the limit within an industrial context. I want to prove to myself that I can navigate the entire path—from hardware and RTOS to Data and Edge AI. 
+
+After completing this comprehensive journey, I will then choose one specific domain to focus on and elevate to an expert level.
