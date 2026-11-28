@@ -1,4 +1,4 @@
-# Julectron EdgeGuard 🚀🖤
+# Julectron EdgeGuard 
 <img width="400" alt="mypic" src="https://github.com/user-attachments/assets/ba7c9747-32a3-4847-a806-ab6905b1f50a" />
 
 ## Overview
