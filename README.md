@@ -1,5 +1,5 @@
 # Julectron EdgeGuard 🚀🖤
-<img width="300" height="400" alt="mypic" src="https://github.com/user-attachments/assets/ba7c9747-32a3-4847-a806-ab6905b1f50a" />
+<img width="350" height="400" alt="mypic" src="https://github.com/user-attachments/assets/ba7c9747-32a3-4847-a806-ab6905b1f50a" />
 
 ## Overview
 A Real-Time Intelligent Motor Condition Monitoring System with Embedded Anomaly Detection. 
