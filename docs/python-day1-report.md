@@ -75,3 +75,12 @@ Today's focus was on setting up the development environment, organizing the CWRU
 While the initial infrastructure is ready and 14 files passed validation, two files still require investigation.
 The project has not yet entered the signal processing and AI model development phase.
 **End-of-day status:** Initial setup completed; dataset validation is in progress.
+
+---
+
+## Update (Day 2)
+
+- Successfully validated all 16 files of the CWRU dataset.
+- Resolved the previous issues with `normal/98.mat` and `normal/99.mat`. *(Note: I had to seek technical guidance to properly investigate and fix the underlying file structure and validation logic).*
+- The data is now fully validated and ready for the Machine Learning pipeline.
+- **Next step:** Starting the ML pipeline (Problem Definition, Data Cleaning, and Feature Engineering).
